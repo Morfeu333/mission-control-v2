@@ -6,12 +6,12 @@ import { oc } from '../lib/openclaw-api'
 import { usePolling } from '../lib/usePolling'
 
 function timeAgo(ts: number) {
-  if (!ts) return 'never'
+  if (!ts) return 'nunca'
   const s = Math.floor((Date.now() - ts) / 1000)
-  if (s < 60) return `${s}s ago`
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
-  return `${Math.floor(s / 86400)}d ago`
+  if (s < 60) return `${s}s atrás`
+  if (s < 3600) return `${Math.floor(s / 60)}min atrás`
+  if (s < 86400) return `${Math.floor(s / 3600)}h atrás`
+  return `${Math.floor(s / 86400)}d atrás`
 }
 
 function formatDuration(ms: number) {
@@ -100,12 +100,12 @@ export default function Agents() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {[
-                  ['Last Heartbeat', timeAgo(agent.lastHeartbeat)],
-                  ['Last Run', agent.lastRunStatus || '—'],
-                  ['Errors', agent.consecutiveErrors === 0
+                  ['Último Heartbeat', timeAgo(agent.lastHeartbeat)],
+                  ['Último Run', agent.lastRunStatus || '—'],
+                  ['Erros', agent.consecutiveErrors === 0
                     ? '✓ 0'
                     : `⚠ ${agent.consecutiveErrors}`],
-                  ['Task', agent.currentTask?.slice(0, 30) || '—'],
+                  ['Tarefa', agent.currentTask?.slice(0, 30) || '—'],
                 ].map(([label, value]) => (
                   <div key={label as string}>
                     <div style={{
@@ -114,7 +114,7 @@ export default function Agents() {
                     }}>{label}</div>
                     <div style={{
                       fontSize: 12, fontFamily: 'monospace',
-                      color: label === 'Errors' && agent.consecutiveErrors > 0
+                      color: label === 'Erros' && agent.consecutiveErrors > 0
                         ? '#DC2626' : 'var(--text-primary)'
                     }}>{String(value)}</div>
                   </div>
@@ -137,7 +137,7 @@ export default function Agents() {
             fontFamily: 'Georgia,serif', fontSize: 14, fontWeight: 'bold',
             color: 'var(--text-secondary)', margin: 0
           }}>
-            Recent Runs
+            Runs Recentes
           </h3>
           <Activity size={16} color="var(--text-muted)" />
         </div>
@@ -268,7 +268,10 @@ export default function Agents() {
                     : '—'
 
                   return (
-                    <tr key={id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <tr key={id} style={{
+                      borderBottom: '1px solid var(--border)',
+                      background: lastStatus === 'error' ? 'rgba(220,38,38,0.04)' : 'transparent'
+                    }}>
                       <td style={{ padding: '8px 12px', fontFamily: 'system-ui', fontSize: 12, fontWeight: 500 }}>
                         {job.name}
                       </td>
@@ -283,7 +286,7 @@ export default function Agents() {
                             background: enabled ? '#059669' : '#9CA3AF',
                             display: 'inline-block'
                           }} />
-                          {enabled ? 'enabled' : 'disabled'}
+                          {enabled ? 'ativo' : 'inativo'}
                         </span>
                       </td>
                       <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontSize: 11 }}>

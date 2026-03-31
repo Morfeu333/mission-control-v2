@@ -19,8 +19,8 @@ function formatLastRun(cron: any) {
   if (!last) return '—'
   const d = new Date(last)
   const s = Math.floor((Date.now() - d.getTime()) / 1000)
-  if (s < 60) return `${s}s ago`
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 60) return `${s}s atrás`
+  if (s < 3600) return `${Math.floor(s / 60)}min atrás`
   return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
@@ -53,7 +53,7 @@ function CronStatusBadge({ enabled }: { enabled: boolean }) {
         background: enabled ? '#059669' : '#9CA3AF',
         display: 'inline-block'
       }} />
-      {enabled ? 'enabled' : 'disabled'}
+      {enabled ? 'ativo' : 'inativo'}
     </span>
   )
 }
@@ -83,10 +83,10 @@ export default function Crons() {
     setTriggeringId(id)
     try {
       await oc.triggerCron(id)
-      showMessage(`✓ "${name}" triggered successfully`, 'ok')
+      showMessage(`✓ "${name}" executado com sucesso`, 'ok')
       setTimeout(refresh, 2000)
     } catch (e) {
-      showMessage(`Error: ${e}`, 'err')
+      showMessage(`Erro: ${e}`, 'err')
     } finally {
       setTriggeringId(null)
     }
@@ -124,7 +124,7 @@ export default function Crons() {
               cursor: 'pointer', fontSize: 13, fontFamily: 'system-ui'
             }}
           >
-            <RefreshCw size={13} /> Refresh
+            <RefreshCw size={13} /> Atualizar
           </button>
         }
       />
@@ -190,7 +190,8 @@ export default function Crons() {
           return (
             <div key={id} style={{
               background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 8, overflow: 'hidden'
+              borderRadius: 8, overflow: 'hidden',
+              borderLeft: lastStatus === 'error' ? '3px solid #DC2626' : undefined
             }}>
               {/* Job header row */}
               <div style={{
@@ -237,7 +238,7 @@ export default function Crons() {
                 {/* Last run */}
                 <div style={{ minWidth: 100 }}>
                   <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'system-ui', marginBottom: 1 }}>
-                    LAST RUN
+                    ÚLTIMO RUN
                   </div>
                   <div style={{ fontSize: 12, fontFamily: 'monospace' }}>
                     {formatLastRun(job)}
@@ -247,7 +248,7 @@ export default function Crons() {
                 {/* Next run */}
                 <div style={{ minWidth: 110 }}>
                   <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'system-ui', marginBottom: 1 }}>
-                    NEXT RUN
+                    PRÓXIMO RUN
                   </div>
                   <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--accent)' }}>
                     {formatNextRun(job)}
@@ -269,7 +270,7 @@ export default function Crons() {
                     }}
                   >
                     <Play size={12} />
-                    {triggeringId === id ? 'Running...' : 'Run'}
+                    {triggeringId === id ? 'Executando...' : 'Executar'}
                   </button>
                 </div>
               </div>
@@ -285,7 +286,7 @@ export default function Crons() {
                     textTransform: 'uppercase', letterSpacing: 1,
                     color: 'var(--text-muted)', marginBottom: 8
                   }}>
-                    Run History
+                    Histórico de Runs
                   </div>
                   {runs.length === 0 ? (
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'system-ui' }}>

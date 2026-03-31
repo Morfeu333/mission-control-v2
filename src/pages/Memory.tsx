@@ -42,9 +42,40 @@ function today() {
 export default function Memory() {
   const [selectedWs, setSelectedWs] = useState<string | null>(null)
   const [sessionContent, setSessionContent] = useState<any>(null)
+  const [fileContent, setFileContent] = useState<Record<string, string | null>>({})
+  const [loadingFile, setLoadingFile] = useState<string | null>(null)
+
+  const fetchFileContent = async (filePath: string) => {
+    if (fileContent[filePath] !== undefined) {
+      // toggle off if already loaded
+      setFileContent((prev) => {
+        const next = { ...prev }
+        delete next[filePath]
+        return next
+      })
+      return
+    }
+    setLoadingFile(filePath)
+    try {
+      const res = await fetch(`http://localhost:7778/api/mc/files/read?path=${encodeURIComponent(filePath)}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const text = await res.text()
+      setFileContent((prev) => ({ ...prev, [filePath]: text }))
+    } catch {
+      setFileContent((prev) => ({ ...prev, [filePath]: null }))
+    } finally {
+      setLoadingFile(null)
+    }
+  }
 
   const statusFetcher = useCallback(() => oc.status(), [])
-  const sessionsFetcher = useCallback(() => oc.sessions(), [])
+  const sessionsFetcher = useCallback(async () => {
+    try {
+      return await oc.sessions()
+    } catch {
+      return []
+    }
+  }, [])
 
   const { data: ocStatus } = usePolling(statusFetcher, 30000)
   const { data: sessionsData } = usePolling(sessionsFetcher, 30000)
@@ -97,36 +128,66 @@ export default function Memory() {
             }}>
               {ws.path}
             </div>
-            {selectedWs === ws.id && (
-              <div style={{
-                marginTop: 12, padding: '10px', background: 'var(--bg-secondary)',
-                borderRadius: 6, fontSize: 12, fontFamily: 'system-ui'
-              }}>
-                <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
-                  Arquivos de hoje ({today()}):
-                </div>
+            {selectedWs === ws.id && (() => {
+              const filePath = `${ws.path}${today()}.md`
+              const content = fileContent[filePath]
+              const isLoading = loadingFile === filePath
+              return (
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  color: 'var(--accent)', cursor: 'default'
+                  marginTop: 12, padding: '10px', background: 'var(--bg-secondary)',
+                  borderRadius: 6, fontSize: 12, fontFamily: 'system-ui'
                 }}>
-                  <FileText size={13} />
-                  <span>{today()}.md</span>
-                </div>
-                <div style={{
-                  marginTop: 8, fontSize: 11, color: 'var(--text-muted)',
-                  fontStyle: 'italic'
-                }}>
-                  Para ler o conteúdo, acesse o arquivo diretamente no filesystem:
-                  <br />
-                  <code style={{
-                    fontFamily: 'monospace', fontSize: 11,
-                    background: '#E5E7EB', borderRadius: 3, padding: '1px 4px'
+                  <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--text-secondary)' }}>
+                    Arquivos de hoje ({today()}):
+                  </div>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
                   }}>
-                    cat {ws.path}{today()}.md
-                  </code>
+                    <FileText size={13} color="var(--accent)" />
+                    <span style={{ color: 'var(--accent)' }}>{today()}.md</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); fetchFileContent(filePath) }}
+                      disabled={isLoading}
+                      style={{
+                        marginLeft: 4, fontSize: 10, fontFamily: 'system-ui',
+                        cursor: isLoading ? 'default' : 'pointer',
+                        background: 'var(--bg-card)', border: '1px solid var(--border)',
+                        borderRadius: 4, padding: '2px 7px', color: 'var(--text-secondary)',
+                      }}
+                    >
+                      {isLoading ? '...' : content !== undefined ? 'Fechar' : 'Ver'}
+                    </button>
+                  </div>
+                  {content !== undefined && (
+                    <div style={{ marginTop: 10 }}>
+                      {content === null ? (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          Endpoint indisponível. Acesse via terminal:
+                          <br />
+                          <code style={{
+                            fontFamily: 'monospace', fontSize: 11,
+                            background: '#E5E7EB', borderRadius: 3, padding: '1px 4px'
+                          }}>
+                            cat {filePath}
+                          </code>
+                        </div>
+                      ) : (
+                        <pre style={{
+                          margin: 0, fontSize: 12, fontFamily: 'monospace',
+                          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                          color: 'var(--text-primary)', lineHeight: 1.5,
+                          maxHeight: 400, overflowY: 'auto',
+                          background: 'var(--bg-card)', border: '1px solid var(--border)',
+                          borderRadius: 6, padding: '10px 12px',
+                        }}>
+                          {content}
+                        </pre>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })()}
           </div>
         ))}
       </div>
@@ -143,7 +204,7 @@ export default function Memory() {
             fontFamily: 'Georgia,serif', fontSize: 14, fontWeight: 'bold',
             color: 'var(--text-secondary)', margin: 0
           }}>
-            OpenClaw Sessions
+            Sessões OpenClaw
           </h3>
           <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'system-ui' }}>
             {sessions.length} session{sessions.length !== 1 ? 's' : ''}
@@ -220,7 +281,7 @@ export default function Memory() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontFamily: 'Georgia,serif', fontSize: 16, margin: 0 }}>
-                Session Details
+                Detalhes da Sessão
               </h3>
               <button
                 onClick={() => setSessionContent(null)}

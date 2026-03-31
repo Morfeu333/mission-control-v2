@@ -56,8 +56,9 @@ export default function Scraper() {
 
   const okRuns = runs?.filter((r) => r.status === 'ok') ?? []
   const errorRuns = runs?.filter((r) => r.status === 'error') ?? []
-  const avgDuration = okRuns.length > 0
-    ? Math.round(okRuns.reduce((s, r) => s + r.durationMs, 0) / okRuns.length)
+  const validRuns = okRuns.filter(r => r.durationMs < 1800000)
+  const avgDuration = validRuns.length > 0
+    ? Math.round(validRuns.reduce((s, r) => s + r.durationMs, 0) / validRuns.length)
     : 0
   const lastRun = runs?.[0]
 

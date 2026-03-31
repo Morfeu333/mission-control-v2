@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Users, Flame, TrendingUp, RefreshCw } from 'lucide-react'
-import PageHeader from '../components/PageHeader'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
-import PriorityBadge from '../components/PriorityBadge'
 import { convexApi } from '../lib/convex-api'
 import { oc } from '../lib/openclaw-api'
 import { usePolling } from '../lib/usePolling'
@@ -60,9 +58,9 @@ function LiveClock() {
 
 function timeAgo(ts: number) {
   const s = Math.floor((Date.now() - ts) / 1000)
-  if (s < 60) return `${s}s ago`
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  return `${Math.floor(s / 3600)}h ago`
+  if (s < 60) return `${s}s atrás`
+  if (s < 3600) return `${Math.floor(s / 60)}min atrás`
+  return `${Math.floor(s / 3600)}h atrás`
 }
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -75,6 +73,16 @@ const ACTIVITY_COLORS: Record<string, string> = {
   meeting_scheduled: '#DC2626',
   notion_synced: '#059669',
   agent_run: '#6B7280',
+}
+
+const ACTIVITY_LABELS: Record<string, { icon: string; label: string; color: string }> = {
+  lead_created: { icon: '👤', label: 'Novo lead capturado', color: '#10B981' },
+  notion_synced: { icon: '🔗', label: 'Sincronizado no Notion', color: '#6366F1' },
+  dm_sent: { icon: '💬', label: 'DM enviada', color: '#3B82F6' },
+  lead_updated: { icon: '✏️', label: 'Lead atualizado', color: '#F59E0B' },
+  status_changed: { icon: '🔄', label: 'Status alterado', color: '#8B5CF6' },
+  scraper_run: { icon: '🕷️', label: 'Scraper executado', color: '#6B7280' },
+  comment_posted: { icon: '💭', label: 'Comentário postado', color: '#EC4899' },
 }
 
 export default function Dashboard() {
@@ -283,20 +291,42 @@ export default function Dashboard() {
                 Sem atividades ainda...
               </p>
             )}
-            {activities?.map((act: Activity) => (
-              <div key={act._id} style={{
-                padding: '8px 10px', background: 'var(--bg-secondary)',
-                borderRadius: 6,
-                borderLeft: `3px solid ${ACTIVITY_COLORS[act.type] || '#6B7280'}`
-              }}>
-                <div style={{ fontSize: 12, fontFamily: 'system-ui', color: 'var(--text-primary)', lineHeight: 1.4 }}>
-                  {act.message}
+            {activities?.map((act: Activity) => {
+              const mapped = ACTIVITY_LABELS[act.type]
+              const borderColor = mapped?.color || ACTIVITY_COLORS[act.type] || '#6B7280'
+              return (
+                <div key={act._id} style={{
+                  padding: '8px 10px', background: 'var(--bg-secondary)',
+                  borderRadius: 6,
+                  borderLeft: `3px solid ${borderColor}`
+                }}>
+                  <div style={{ fontSize: 12, fontFamily: 'system-ui', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                    {mapped ? (
+                      <span>
+                        <span style={{ marginRight: 5 }}>{mapped.icon}</span>
+                        <span style={{ color: mapped.color, fontWeight: 600 }}>{mapped.label}</span>
+                        {act.message && (
+                          <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> — {act.message}</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span>
+                        <span style={{
+                          fontSize: 10, fontFamily: 'monospace',
+                          background: 'var(--bg-card)', border: '1px solid var(--border)',
+                          borderRadius: 3, padding: '1px 4px', marginRight: 6,
+                          color: 'var(--text-muted)'
+                        }}>{act.type}</span>
+                        {act.message}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 3 }}>
+                    {act.agentId} · {new Date(act.timestamp).toLocaleTimeString('pt-BR')}
+                  </div>
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 3 }}>
-                  {act.agentId} · {new Date(act.timestamp).toLocaleTimeString('pt-BR')}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 

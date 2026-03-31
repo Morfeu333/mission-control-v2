@@ -15,6 +15,7 @@ async function localFetch(path: string, opts: RequestInit = {}) {
 
 export const oc = {
   status: () => ocFetch('/health'),
+  sessions: () => ocFetch('/sessions'),
   cronJobs: () => localFetch('/cron/jobs'),
   cronRuns: (id: string) => localFetch(`/cron/runs/${encodeURIComponent(id)}`),
   triggerCron: (id: string) => localFetch(`/cron/trigger/${encodeURIComponent(id)}`, { method: 'POST' }),

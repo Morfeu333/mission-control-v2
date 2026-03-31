@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { LayoutDashboard, Kanban, Radar, MessageSquare, Bot, Clock, BookOpen } from 'lucide-react'
 
@@ -13,6 +14,7 @@ const NAV = [
 
 export default function Sidebar() {
   const loc = useLocation()
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null)
   return (
     <aside style={{
       position: 'fixed', left: 0, top: 0, width: 220, height: '100vh',
@@ -32,17 +34,24 @@ export default function Sidebar() {
       <nav style={{ flex: 1, padding: '12px 0' }}>
         {NAV.map(({ path, icon: Icon, label }) => {
           const active = loc.pathname === path
+          const hovered = hoveredPath === path
           return (
-            <Link key={path} to={path} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 20px',
-              color: active ? 'white' : 'rgba(255,255,255,0.45)',
-              background: active ? 'rgba(232,93,26,0.18)' : 'transparent',
-              borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
-              textDecoration: 'none', fontSize: 13,
-              fontFamily: 'system-ui, sans-serif',
-              transition: 'all 0.15s',
-            }}>
+            <Link
+              key={path}
+              to={path}
+              onMouseEnter={() => setHoveredPath(path)}
+              onMouseLeave={() => setHoveredPath(null)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 20px',
+                color: active ? 'white' : hovered ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)',
+                background: active ? 'rgba(232,93,26,0.18)' : hovered ? 'rgba(255,255,255,0.06)' : 'transparent',
+                borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
+                textDecoration: 'none', fontSize: 13,
+                fontFamily: 'system-ui, sans-serif',
+                transition: 'all 0.15s',
+              }}
+            >
               <Icon size={15} />
               {label}
             </Link>

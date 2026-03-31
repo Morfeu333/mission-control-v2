@@ -13,6 +13,65 @@ function timeAgo(ts: number) {
   return new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
+function DraftBox({
+  title,
+  text,
+  bgColor,
+  borderColor,
+}: {
+  title: string
+  text: string
+  bgColor: string
+  borderColor: string
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div style={{
+      background: bgColor,
+      border: `1px solid ${borderColor}`,
+      borderRadius: 8,
+      padding: '12px 14px',
+    }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8
+      }}>
+        <span style={{
+          fontSize: 12, fontFamily: 'system-ui', fontWeight: 700,
+          color: 'var(--text-secondary)'
+        }}>
+          {title}
+        </span>
+        <button
+          onClick={handleCopy}
+          style={{
+            fontSize: 11, fontFamily: 'system-ui', cursor: 'pointer',
+            background: 'var(--bg-card)', border: '1px solid var(--border)',
+            borderRadius: 4, padding: '3px 8px', color: 'var(--text-secondary)',
+            transition: 'all 0.15s'
+          }}
+        >
+          {copied ? 'Copiado!' : 'Copiar'}
+        </button>
+      </div>
+      <pre style={{
+        margin: 0, fontSize: 12, fontFamily: 'monospace',
+        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        color: 'var(--text-primary)', lineHeight: 1.5,
+      }}>
+        {text}
+      </pre>
+    </div>
+  )
+}
+
 export default function SDRInbox() {
   const [selectedLead, setSelectedLead] = useState<any>(null)
 
@@ -227,6 +286,38 @@ export default function SDRInbox() {
                 ))}
               </div>
 
+              {/* Agent Drafts */}
+              {(selectedLead.draftWhatsapp || selectedLead.draftEmail) && (
+                <div style={{
+                  padding: '12px 20px', borderTop: '1px solid var(--border)',
+                  display: 'flex', flexDirection: 'column', gap: 10
+                }}>
+                  <div style={{
+                    fontSize: 11, fontFamily: 'system-ui', fontWeight: 700,
+                    textTransform: 'uppercase', letterSpacing: 1,
+                    color: 'var(--text-muted)', marginBottom: 2
+                  }}>
+                    Drafts dos Agentes
+                  </div>
+                  {selectedLead.draftWhatsapp && (
+                    <DraftBox
+                      title="💬 Draft WhatsApp"
+                      text={selectedLead.draftWhatsapp}
+                      bgColor="rgba(16,185,129,0.06)"
+                      borderColor="rgba(16,185,129,0.2)"
+                    />
+                  )}
+                  {selectedLead.draftEmail && (
+                    <DraftBox
+                      title="✉️ Draft Email"
+                      text={selectedLead.draftEmail}
+                      bgColor="rgba(59,130,246,0.06)"
+                      borderColor="rgba(59,130,246,0.2)"
+                    />
+                  )}
+                </div>
+              )}
+
               {/* Lead context footer */}
               <div style={{
                 padding: '10px 20px', borderTop: '1px solid var(--border)',
@@ -235,7 +326,7 @@ export default function SDRInbox() {
                 color: 'var(--text-muted)'
               }}>
                 <span>Status: <strong>{selectedLead.status}</strong></span>
-                <span>Priority: <strong>{selectedLead.priority}</strong></span>
+                <span>Prioridade: <strong>{selectedLead.priority}</strong></span>
                 <span>Canal: <strong>{selectedLead.preferredChannel || 'facebook'}</strong></span>
                 {selectedLead.lastFbReply && (
                   <span style={{ marginLeft: 'auto', color: '#10B981' }}>
